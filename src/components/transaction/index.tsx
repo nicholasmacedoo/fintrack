@@ -3,6 +3,7 @@ import { MaterialIcons } from "@expo/vector-icons";
 import { TransactionTypes } from "@/utils/transaction-types";
 import { styles } from "./styles";
 import { colors } from "@/theme";
+import { Loading } from "../loading";
 
 export interface TransactionProps {
   id: string;
@@ -15,9 +16,10 @@ export interface TransactionProps {
 interface Props {
   data: TransactionProps;
   onRemove: () => void;
+  isRemoving?: boolean;
 }
 
-export function Transaction({ data, onRemove }: Props) {
+export function Transaction({ data, onRemove, isRemoving = false }: Props) {
   return (
     <View style={styles.container}>
       <MaterialIcons
@@ -40,8 +42,16 @@ export function Transaction({ data, onRemove }: Props) {
         </Text>
       </View>
 
-      <TouchableOpacity activeOpacity={0.8} onPress={onRemove}>
-        <MaterialIcons name="close" size={18} color={colors.gray[500]} />
+      <TouchableOpacity
+        activeOpacity={0.8}
+        onPress={onRemove}
+        disabled={isRemoving}
+      >
+        {isRemoving ? (
+          <Loading />
+        ) : (
+          <MaterialIcons name="close" size={18} color={colors.gray[500]} />
+        )}
       </TouchableOpacity>
     </View>
   );
