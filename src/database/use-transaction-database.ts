@@ -32,7 +32,7 @@ export function useTransactionsDatabase() {
     })
   }
 
-  function listByTargetId(id: number) {
+  async function listByTargetId(id: number) {
     return database.getAllAsync<TransactionResponse>(`
         SELECT id, target_id, amount, observation, created_at, updated_at
         FROM transactions
@@ -41,5 +41,9 @@ export function useTransactionsDatabase() {
       `)
   }
 
-  return { create, listByTargetId }
+  async function remove(id: number) {
+    await database.runAsync("DELETE FROM transactions WHERE id = ?", id)
+  }
+
+  return { create, listByTargetId, remove }
 }

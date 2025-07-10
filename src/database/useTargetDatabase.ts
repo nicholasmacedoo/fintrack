@@ -5,6 +5,10 @@ export interface TargetCreate {
     amount: number
 }
 
+interface TargetUpdate extends TargetCreate {
+    id: number
+}
+
 export interface TargetResponse {
     id: number
     name: string
@@ -44,7 +48,7 @@ export function useTargetDatabase() {
         `)
     }
 
-    function show(id: number) {
+    async function show(id: number) {
         return database.getFirstAsync<TargetResponse>(`
             SELECT 
                 targets.id,
@@ -60,9 +64,26 @@ export function useTargetDatabase() {
         `)
     }
 
+    async function update(data: TargetUpdate) {
+        const statement = await database.prepareAsync(`
+            UPDATE targets SET
+                name = $name,
+                amount = $amount,
+                updated_at = CURRENT_TIMESTAMP
+            WHERE id = $id
+        `)
+
+        await statement.executeAsync({
+            $id: data.id,
+            $name: data.name,
+            $amount: data.amount,
+        })
+    }
+
     return {
         create,
         show,
-        listBySavedValue
+        update,
+        listBySavedValue,
     }
 }

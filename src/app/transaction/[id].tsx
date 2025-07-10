@@ -15,7 +15,7 @@ export default function Transaction() {
   const params = useLocalSearchParams<{ id: string }>();
   const [isCreating, setIsCreating] = useState(false);
   const [observation, setObservation] = useState("");
-  const transactionsDatabase = useTransactionsDatabase();
+  const { create } = useTransactionsDatabase();
 
   async function handleCreate() {
     try {
@@ -28,7 +28,7 @@ export default function Transaction() {
 
       setIsCreating(true);
 
-      await transactionsDatabase.create({
+      await create({
         target_id: Number(params.id),
         amount: type === TransactionTypes.Output ? amount * -1 : amount,
         observation,

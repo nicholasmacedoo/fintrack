@@ -10,7 +10,7 @@ import { numberToCurrency } from "@/utils/numberToCurrency";
 import { TransactionTypes } from "@/utils/transaction-types";
 
 import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import { Alert, StatusBar, View } from "react-native";
 
 export default function InProgress() {
@@ -22,9 +22,12 @@ export default function InProgress() {
     percentage: 0,
   });
   const [transactions, setTransactions] = useState<TransactionProps[]>([]);
+  const [isRemovingTransactionId, setIsRemovingTransactionId] = useState<
+    number | null
+  >(null);
   const params = useLocalSearchParams<{ id: string }>();
   const { show } = useTargetDatabase();
-  const { listByTargetId } = useTransactionsDatabase();
+  const { listByTargetId, remove } = useTransactionsDatabase();
 
   async function fetchDetails() {
     try {
@@ -49,13 +52,40 @@ export default function InProgress() {
             item.amount < 0 ? TransactionTypes.Output : TransactionTypes.Input,
         }))
       );
-      console.log(response);
     } catch (error) {
       Alert.alert("Error", "Não foi possivel carregar os detalhes da meta");
       console.log(error);
     } finally {
       setIsFetching(false);
     }
+  }
+
+  async function removeTransaction(id: number) {
+    try {
+      setIsRemovingTransactionId(id);
+      await remove(id);
+      await fetchDetails();
+
+      return Alert.alert("Sucesso!", "Transação deletada com sucesso!");
+    } catch (error) {
+      Alert.alert(
+        "Error!",
+        "Não foi possivel remover a transação, tente novamente."
+      );
+    } finally {
+      setIsRemovingTransactionId(null);
+    }
+  }
+
+  async function handleRemove(id: string) {
+    Alert.alert("Remover", "Deseja realmente remover essa transação?", [
+      { text: "Não", style: "cancel" },
+      {
+        text: "Sim",
+        style: "destructive",
+        onPress: () => removeTransaction(+id),
+      },
+    ]);
   }
 
   useFocusEffect(
@@ -73,7 +103,7 @@ export default function InProgress() {
         title={details.name}
         rightButton={{
           icon: "edit",
-          onPress: () => {},
+          onPress: () => router.navigate(`/target?id=${params.id}`),
         }}
       />
 
@@ -83,7 +113,11 @@ export default function InProgress() {
         title="Transações"
         data={transactions}
         renderItem={({ item }) => (
-          <Transaction data={item} onRemove={() => {}} />
+          <Transaction
+            data={item}
+            onRemove={() => handleRemove(item.id)}
+            isRemoving={isRemovingTransactionId === +item.id}
+          />
         )}
         emptyMessage="Nenhuma transação. Toque em nova transcação para guardar seu primeiro dinheiro aqui."
       />
